@@ -1,0 +1,7 @@
+.secret_key
+__pycache__/
+*.pyc
+.env
+.vscode/
+.idea/
+database.json

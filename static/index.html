@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Automation Engine - Industrial Sales Intelligence</title>
+    <!-- Google Fonts for modern typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css?v=1.0.2">
+</head>
+<body>
+    <div id="app" class="app-container">
+        <!-- Auth View -->
+        <div id="auth-view" class="view auth-view hidden">
+            <div class="auth-card glass">
+                <div class="auth-header">
+                    <div class="logo-wrapper">
+                        <svg class="logo-svg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="var(--accent-glow)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M2 17L12 22L22 17" stroke="var(--accent-glow)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M2 12L12 17L22 12" stroke="var(--accent-glow)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <h1>THE AUTOMATION ENGINE</h1>
+                    <p class="subtitle">SOP for Elite Industrial Sales Intelligence</p>
+                </div>
+                
+                <!-- Login Form -->
+                <form id="login-form" class="auth-form">
+                    <h2>Authorized Access Only</h2>
+                    <div class="form-group">
+                        <label for="login-username">Username</label>
+                        <input type="text" id="login-username" required placeholder="Enter username">
+                    </div>
+                    <div class="form-group">
+                        <label for="login-password">Password</label>
+                        <input type="password" id="login-password" required placeholder="Enter password">
+                    </div>
+                    <div id="login-error" class="error-msg hidden"></div>
+                    <button type="submit" class="btn primary-btn">Authenticate</button>
+                    <p class="form-footer-text">Need an account? <span id="toggle-to-register">Register here</span></p>
+                </form>
+
+                <!-- Register Form -->
+                <form id="register-form" class="auth-form hidden">
+                    <h2>Register Account</h2>
+                    <div class="form-group">
+                        <label for="register-username">Username</label>
+                        <input type="text" id="register-username" required placeholder="Choose a username">
+                    </div>
+                    <div class="form-group">
+                        <label for="register-password">Password</label>
+                        <input type="password" id="register-password" required placeholder="Choose a password (min 8 chars)">
+                    </div>
+                    <div id="register-error" class="error-msg hidden"></div>
+                    <div id="register-success" class="success-msg hidden"></div>
+                    <button type="submit" class="btn primary-btn">Create Account</button>
+                    <p class="form-footer-text">Already authorized? <span id="toggle-to-login">Log in here</span></p>
+                </form>
+            </div>
+        </div>
+
+        <!-- Main Dashboard View -->
+        <div id="dashboard-view" class="view dashboard-view hidden">
+            <!-- Sidebar -->
+            <aside class="sidebar glass">
+                <div class="sidebar-brand">
+                    <svg class="logo-svg small-logo" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="var(--accent-glow)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M2 17L12 22L22 17" stroke="var(--accent-glow)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M2 12L12 17L22 12" stroke="var(--accent-glow)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <span>AUTOMATION ENGINE</span>
+                </div>
+                <div class="user-profile">
+                    <div class="user-avatar">AD</div>
+                    <div class="user-info">
+                        <span id="current-user-display" class="username">Admin</span>
+                        <span class="role">Sales Intelligence Officer</span>
+                    </div>
+                </div>
+                <nav class="sidebar-nav">
+                    <button class="nav-item active" data-tab="tab-overview">
+                        <span class="icon">📊</span> Overview
+                    </button>
+                    <button class="nav-item" data-tab="tab-intake">
+                        <span class="icon">📥</span> Raw Ingestion
+                    </button>
+                    <button class="nav-item" data-tab="tab-verification">
+                        <span class="icon">🔍</span> Verification & QC
+                    </button>
+                    <button class="nav-item" data-tab="tab-finished">
+                        <span class="icon">📋</span> Finished Schema
+                    </button>
+                </nav>
+                <div class="sidebar-footer">
+                    <button id="logout-btn" class="btn logout-btn">
+                        <span class="icon">🚪</span> Logout
+                    </button>
+                </div>
+            </aside>
+
+            <!-- Main Panel -->
+            <main class="main-content">
+                <header class="main-header glass">
+                    <div class="header-title">
+                        <h1 id="page-title">Sales Pipeline Overview</h1>
+                        <p class="subtitle" id="page-subtitle">Interactive SOP Control Panel v1.0</p>
+                    </div>
+                    <div class="system-status">
+                        <span class="status-indicator online"></span> System Secure
+                    </div>
+                </header>
+
+                <div class="content-container">
+                    
+                    <!-- TAB 1: OVERVIEW -->
+                    <div id="tab-overview" class="tab-pane active">
+                        <!-- Stats Grid -->
+                        <div class="stats-grid">
+                            <div class="stat-card glass">
+                                <h3>Total Ingested</h3>
+                                <p class="stat-value" id="stat-total">0</p>
+                                <span class="stat-meta text-muted">All active profiles</span>
+                            </div>
+                            <div class="stat-card glass border-priority-a">
+                                <h3>Priority A (Immediate)</h3>
+                                <p class="stat-value text-priority-a" id="stat-priority-a">0</p>
+                                <span class="stat-meta text-priority-a">Immediate Procurement</span>
+                            </div>
+                            <div class="stat-card glass border-priority-b">
+                                <h3>Priority B (Mid-Term)</h3>
+                                <p class="stat-value text-priority-b" id="stat-priority-b">0</p>
+                                <span class="stat-meta text-priority-b">Strategic Requirements</span>
+                            </div>
+                            <div class="stat-card glass">
+                                <h3>Verified Leads</h3>
+                                <p class="stat-value text-success" id="stat-verified">0</p>
+                                <span class="stat-meta text-success">Passed QC checklist</span>
+                            </div>
+                        </div>
+
+                        <!-- Data-to-Deal Pipeline Flowchart -->
+                        <div class="panel-section glass">
+                            <h2>The Data-to-Deal Pipeline Diagram</h2>
+                            <div class="pipeline-wrapper">
+                                <div class="pipeline-step">
+                                    <div class="step-num">1</div>
+                                    <h4>Raw Intel</h4>
+                                    <p>Multi-channel scrapings & trigger events</p>
+                                </div>
+                                <div class="pipeline-connector">
+                                    <svg viewBox="0 0 100 20" class="arrow-svg"><path d="M0 10 H85 M75 3 L87 10 L75 17" stroke="var(--border-color)" stroke-width="2" fill="none" class="arrow-line"/></svg>
+                                </div>
+                                <div class="pipeline-step">
+                                    <div class="step-num">2</div>
+                                    <h4>Node Mapping</h4>
+                                    <p>Map champions & decision makers</p>
+                                </div>
+                                <div class="pipeline-connector">
+                                    <svg viewBox="0 0 100 20" class="arrow-svg"><path d="M0 10 H85 M75 3 L87 10 L75 17" stroke="var(--border-color)" stroke-width="2" fill="none" class="arrow-line"/></svg>
+                                </div>
+                                <div class="pipeline-step">
+                                    <div class="step-num">3</div>
+                                    <h4>Verification</h4>
+                                    <p>Cross-reference dual source verification</p>
+                                </div>
+                                <div class="pipeline-connector">
+                                    <svg viewBox="0 0 100 20" class="arrow-svg"><path d="M0 10 H85 M75 3 L87 10 L75 17" stroke="var(--border-color)" stroke-width="2" fill="none" class="arrow-line"/></svg>
+                                </div>
+                                <div class="pipeline-step">
+                                    <div class="step-num">4</div>
+                                    <h4>The Sorter</h4>
+                                    <p>Categorize priority A, B, or C</p>
+                                </div>
+                                <div class="pipeline-connector">
+                                    <svg viewBox="0 0 100 20" class="arrow-svg"><path d="M0 10 H85 M75 3 L87 10 L75 17" stroke="var(--border-color)" stroke-width="2" fill="none" class="arrow-line"/></svg>
+                                </div>
+                                <div class="pipeline-step success-step">
+                                    <div class="step-num">5</div>
+                                    <h4>Finished Product</h4>
+                                    <p>Actionable intelligence Excel deliverables</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Target Ecosystem Matrix Panel -->
+                        <div class="ecosystem-row">
+                            <div class="ecosystem-card glass">
+                                <div class="eco-header">
+                                    <span class="eco-icon">🥫</span>
+                                    <h3>Consumables & Processed Goods</h3>
+                                </div>
+                                <ul class="eco-list">
+                                    <li>FMCG</li>
+                                    <li>Food Processing</li>
+                                    <li>Dairy Industry</li>
+                                    <li>Pharmaceutical</li>
+                                    <li>Chemicals</li>
+                                </ul>
+                            </div>
+                            <div class="ecosystem-card glass">
+                                <div class="eco-header">
+                                    <span class="eco-icon">⚙️</span>
+                                    <h3>Hard Goods & Components</h3>
+                                </div>
+                                <ul class="eco-list">
+                                    <li>White Goods Mfg</li>
+                                    <li>Consumer Durables</li>
+                                    <li>Electronics Manufacturing</li>
+                                    <li>Automotive Components</li>
+                                    <li>Packaging Companies</li>
+                                </ul>
+                            </div>
+                            <div class="ecosystem-card glass">
+                                <div class="eco-header">
+                                    <span class="eco-icon">🚛</span>
+                                    <h3>Storage & Distribution</h3>
+                                </div>
+                                <ul class="eco-list">
+                                    <li>Warehousing & Depots</li>
+                                    <li>3PL Logistics Providers</li>
+                                    <li>Cold Storage Facilities</li>
+                                    <li>E-commerce Fulfilment</li>
+                                    <li>Distribution Centres</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB 2: RAW INTAKE -->
+                    <div id="tab-intake" class="tab-pane">
+                        <div class="split-layout">
+                            <div class="form-columns-left">
+                                <!-- Automated Lead Discovery Panel -->
+                                <div class="discovery-container glass" style="margin-bottom: 32px; padding: 30px; border-radius: 16px;">
+                                    <h2>🛰️ Automated Lead Discovery Scanner</h2>
+                                    <p class="section-desc" style="color: var(--text-secondary); font-size: 13px; margin-bottom: 20px;">
+                                        Scans Google News alerts for live tenders, facility expansions, or new plants, and automatically maps target decision-maker profiles from Apollo/LinkedIn directories.
+                                    </p>
+                                    <div class="discovery-controls" style="display: flex; gap: 16px; align-items: flex-end; margin-bottom: 24px;">
+                                        <div class="form-group" style="flex-grow: 1; margin-bottom: 0;">
+                                            <label for="discovery-sector">Select Target Sector</label>
+                                            <select id="discovery-sector" style="width: 100%;">
+                                                <option value="FMCG">FMCG / Food & Beverage</option>
+                                                <option value="Food Processing">Food Processing / Manufacturing</option>
+                                                <option value="Cold Storage">Cold Storage & Logistics</option>
+                                                <option value="Automotive Components">Automotive Components</option>
+                                                <option value="Electronics Manufacturing">Electronics Manufacturing</option>
+                                                <option value="Warehousing">Warehousing & Distribution</option>
+                                                <option value="Packaging Companies">Packaging & Secondary Packaging</option>
+                                            </select>
+                                        </div>
+                                        <button type="button" id="discovery-scan-btn" class="btn primary-btn" style="width: auto; height: 45px; display: inline-flex; align-items: center; gap: 8px;">
+                                            <span>🔍</span> Scan for Leads
+                                        </button>
+                                    </div>
+
+                                    <!-- Loading indicator -->
+                                    <div id="discovery-loading" class="hidden" style="text-align: center; padding: 30px;">
+                                        <div class="spinner" style="border: 3px solid rgba(255,255,255,0.05); border-top: 3px solid var(--accent-glow); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 0 auto 12px auto;"></div>
+                                        <p style="font-size: 13px; color: var(--accent-glow);">Scanning Google News & Mapping Target Decision Makers...</p>
+                                    </div>
+
+                                    <!-- Scan Results Table -->
+                                    <div id="discovery-results-wrapper" class="hidden" style="margin-top: 20px;">
+                                        <h3 style="font-family: var(--font-header); font-size: 13px; margin-bottom: 12px; color: var(--text-secondary); text-transform: uppercase;">Discovered Lead Opportunities</h3>
+                                        <div class="table-container" style="border-radius: 8px; border: 1px solid var(--border-color); max-height: 300px; overflow-y: auto;">
+                                            <table class="deliverable-table" style="font-size: 11px;">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Company</th>
+                                                        <th>Buying Signal / Headline</th>
+                                                        <th>Mapped Decision Maker</th>
+                                                        <th>Priority</th>
+                                                        <th style="text-align: center;">Action</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="discovery-results-body">
+                                                    <!-- Populated via JS -->
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Original Manual Input Form -->
+                                <div class="form-container glass">
+                                    <h2>2. Alternative: Manual Ingestion Alert</h2>
+                                <form id="intake-form">
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="intake-company">Company Name *</label>
+                                            <input type="text" id="intake-company" required placeholder="e.g. Acme Logistics">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="intake-industry">Target Industry</label>
+                                            <select id="intake-industry">
+                                                <optgroup label="Consumables">
+                                                    <option value="FMCG">FMCG</option>
+                                                    <option value="Food Processing">Food Processing / Manufacturing</option>
+                                                    <option value="Dairy Industry">Dairy Industry</option>
+                                                    <option value="Pharmaceutical Manufacturing">Pharmaceutical Manufacturing</option>
+                                                    <option value="Chemical Manufacturing">Chemical Manufacturing</option>
+                                                </optgroup>
+                                                <optgroup label="Hard Goods">
+                                                    <option value="White Goods Manufacturing">White Goods Manufacturing</option>
+                                                    <option value="Consumer Durables">Consumer Durables</option>
+                                                    <option value="Electronics Manufacturing">Electronics Manufacturing</option>
+                                                    <option value="Automotive Components">Automotive Components</option>
+                                                    <option value="Packaging Companies">Packaging Companies</option>
+                                                </optgroup>
+                                                <optgroup label="Storage & Distribution">
+                                                    <option value="Warehousing">Warehousing</option>
+                                                    <option value="3PL Logistics">3PL Logistics</option>
+                                                    <option value="Cold Storage">Cold Storage</option>
+                                                    <option value="E-commerce Fulfilment">E-commerce Fulfilment Centres</option>
+                                                    <option value="Distribution Centres">Distribution Centres</option>
+                                                </optgroup>
+                                                <option value="Other" selected>Other / Unclassified</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="intake-location">Plant/Facility Location</label>
+                                            <input type="text" id="intake-location" placeholder="e.g. Detroit, MI">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="intake-source">Intelligence Source</label>
+                                            <select id="intake-source">
+                                                <option value="Official Website/Press Release">Official Website / Press Release</option>
+                                                <option value="Tender & Trade Portal">Tender & Trade Portal</option>
+                                                <option value="Professional Network (LinkedIn)">Professional Network (LinkedIn)</option>
+                                                <option value="News & Events Alert">News & Events Alert</option>
+                                                <option value="Lead Intel Platform">Lead Intel Platform (Apollo/ZoomInfo)</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="intake-signal">Raw Buying Signal / Announcement Details</label>
+                                        <textarea id="intake-signal" rows="4" placeholder="Describe the announcement, tender description, conveyor requirement or facility expansion details..."></textarea>
+                                    </div>
+                                    <div class="form-group">
+                                        <button type="submit" class="btn primary-btn">Ingest & Map Node</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        
+                        <div class="info-sidebar glass">
+                                <h3>SOP Intake Mandate</h3>
+                                <div class="alert-box note">
+                                    <strong>Source Topography:</strong> Look for trigger signals published within the last 12 months. Focus on immediate/active triggers such as:
+                                    <ul>
+                                        <li>Floating tenders</li>
+                                        <li>Conveyor upgrades</li>
+                                        <li>New production lines</li>
+                                        <li>Capacity expansion hires</li>
+                                    </ul>
+                                </div>
+                                <div class="workflow-visual">
+                                    <div class="workflow-flow-vertical">
+                                        <div class="flow-bubble">Raw Intelligence Scraped</div>
+                                        <div class="flow-line"></div>
+                                        <div class="flow-bubble highlight">Current Step: Intake</div>
+                                        <div class="flow-line"></div>
+                                        <div class="flow-bubble disabled">Quality Control Verify</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB 3: VERIFICATION AND QC -->
+                    <div id="tab-verification" class="tab-pane">
+                        <div class="split-layout">
+                            <div class="leads-picker-panel glass">
+                                <h3>Active Queue</h3>
+                                <div class="leads-list-queue" id="leads-queue">
+                                    <!-- Populated via Javascript -->
+                                </div>
+                            </div>
+
+                            <div class="verification-details-panel glass" id="verification-panel-empty">
+                                <div class="empty-state">
+                                    <span class="empty-icon">🔍</span>
+                                    <h3>Select a lead from the active queue to perform Quality Control Verification & Node Mapping</h3>
+                                </div>
+                            </div>
+
+                            <!-- Interactive verification & Node Mapping Form -->
+                            <div class="verification-details-panel glass hidden" id="verification-panel-active">
+                                <div class="panel-header-actions">
+                                    <h2 id="qc-company-title">Company Name</h2>
+                                    <span class="badge" id="qc-lead-priority-badge">Priority C</span>
+                                </div>
+                                <form id="qc-form">
+                                    <input type="hidden" id="qc-lead-id">
+                                    
+                                    <div class="form-section-title">
+                                        <span>📂</span> Stage 2: Node Mapping (Target Topology)
+                                    </div>
+                                    
+                                    <div class="alert-box caution">
+                                        <strong>STRICT MANDATE:</strong> Never fabricate names, emails, phone numbers, or titles. Never guess. If unavailable, explicitly write <em>"Not Publicly Available"</em>.
+                                    </div>
+
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="qc-decision-maker">Decision Maker (Champion) *</label>
+                                            <input type="text" id="qc-decision-maker" required placeholder="e.g. John Doe">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="qc-designation">Designation *</label>
+                                            <input type="text" id="qc-designation" required placeholder="e.g. Procurement Manager">
+                                        </div>
+                                    </div>
+
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="qc-email">Official Business Email</label>
+                                            <input type="text" id="qc-email" placeholder="e.g. j.doe@company.com">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="qc-mobile">Business Mobile / Office Phone</label>
+                                            <input type="text" id="qc-mobile" placeholder="e.g. +1-555-0100">
+                                        </div>
+                                    </div>
+
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="qc-linkedin">Decision Maker LinkedIn Link</label>
+                                            <input type="text" id="qc-linkedin" placeholder="e.g. linkedin.com/in/johndoe">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="qc-website">Company Website</label>
+                                            <input type="text" id="qc-website" placeholder="e.g. company.com">
+                                        </div>
+                                    </div>
+
+                                    <div class="form-section-title">
+                                        <span>🛡️</span> Stage 3: Quality Control & Source Verification
+                                    </div>
+                                    
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="qc-source-a">Primary Source A *</label>
+                                            <input type="text" id="qc-source-a" required placeholder="e.g. Apollo Database profile">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="qc-source-b">Cross-Verify Source B *</label>
+                                            <input type="text" id="qc-source-b" required placeholder="e.g. LinkedIn contact verification">
+                                        </div>
+                                    </div>
+
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="qc-conflict-flag">Does information conflict?</label>
+                                            <select id="qc-conflict-flag">
+                                                <option value="no">No, sources are aligned</option>
+                                                <option value="yes">Yes, conflicting details logged</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="qc-confidence">Confidence Score</label>
+                                            <select id="qc-confidence">
+                                                <option value="High">High Confidence</option>
+                                                <option value="Medium">Medium Confidence</option>
+                                                <option value="Low">Low Confidence</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-section-title">
+                                        <span>⚖️</span> Stage 4: Sorter (Trigger Priority Matrix)
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="qc-project-details">Project Details & Sorter Context</label>
+                                        <textarea id="qc-project-details" rows="2" placeholder="e.g. Conveyor Requirement, Factory Expansion, Packaging Line Installation..."></textarea>
+                                    </div>
+
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="qc-estimated-requirement">Estimated Requirement Value</label>
+                                            <input type="text" id="qc-estimated-requirement" placeholder="e.g. $500,000">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="qc-priority">Priority Override</label>
+                                            <select id="qc-priority">
+                                                <option value="Priority A">Priority A (Immediate Procurement)</option>
+                                                <option value="Priority B">Priority B (Mid-term Strategic)</option>
+                                                <option value="Priority C">Priority C (Potential Future)</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="qc-remarks">Officer Remarks / Audit Trail</label>
+                                        <input type="text" id="qc-remarks" placeholder="Log source verification findings and conflicts">
+                                    </div>
+
+                                    <div class="form-row button-row">
+                                        <button type="button" class="btn secondary-btn" id="qc-autoclassify-btn">Run Matrix Scorer</button>
+                                        <button type="submit" class="btn primary-btn" id="qc-submit-btn">Verify and Commit Lead</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB 4: FINISHED PRODUCT SCHEMA -->
+                    <div id="tab-finished" class="tab-pane">
+                        <div class="grid-controls glass">
+                            <div class="search-filter-box">
+                                <input type="text" id="grid-search" placeholder="Search Company or Decision Maker...">
+                                <select id="grid-filter-priority">
+                                    <option value="">All Priorities</option>
+                                    <option value="Priority A">Priority A</option>
+                                    <option value="Priority B">Priority B</option>
+                                    <option value="Priority C">Priority C</option>
+                                </select>
+                                <select id="grid-filter-confidence">
+                                    <option value="">All Confidences</option>
+                                    <option value="High">High Confidence</option>
+                                    <option value="Medium">Medium</option>
+                                    <option value="Low">Low</option>
+                                </select>
+                            </div>
+                            <div class="action-box">
+                                <button id="grid-export-btn" class="btn export-btn">
+                                    <span>📥</span> Export deliverable Excel Schema (CSV)
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Data table layout for the 17 columns -->
+                        <div class="table-container glass">
+                            <table class="deliverable-table" id="leads-table">
+                                <thead>
+                                    <tr>
+                                        <th>Priority</th>
+                                        <th>Company</th>
+                                        <th>Industry</th>
+                                        <th>Location</th>
+                                        <th>Decision Maker</th>
+                                        <th>Designation</th>
+                                        <th>Email</th>
+                                        <th>Mobile</th>
+                                        <th>LinkedIn</th>
+                                        <th>Website</th>
+                                        <th>Buying Signal</th>
+                                        <th>Project Details</th>
+                                        <th>Req. Value</th>
+                                        <th>Source</th>
+                                        <th>Published</th>
+                                        <th>Confidence</th>
+                                        <th>Remarks</th>
+                                        <th class="actions-header">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="leads-table-body">
+                                    <!-- Rendered via Javascript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <script src="/js/app.js"></script>
+</body>
+</html>
