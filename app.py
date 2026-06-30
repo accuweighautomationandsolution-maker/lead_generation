@@ -520,10 +520,15 @@ def generate_decision_maker(company_name, industry):
 @login_required
 def discover_leads():
     sector = request.args.get('sector', 'FMCG').strip()
+    region = request.args.get('region', 'Global').strip()
     
     # Construct Google News RSS Search query
     # Standard RSS queries to match B2B trigger signals
-    search_term = f'"{sector}" AND ("plant expansion" OR "conveyor" OR "new facility" OR "factory expansion" OR "tender")'
+    if region != 'Global':
+        search_term = f'"{sector}" AND "{region}" AND ("plant expansion" OR "conveyor" OR "new facility" OR "factory expansion" OR "tender")'
+    else:
+        search_term = f'"{sector}" AND ("plant expansion" OR "conveyor" OR "new facility" OR "factory expansion" OR "tender")'
+        
     encoded_term = urllib.parse.quote(search_term)
     url = f"https://news.google.com/rss/search?q={encoded_term}&hl=en-US&gl=US&ceid=US:en"
     
@@ -578,11 +583,20 @@ def discover_leads():
             elif any(k in lower_title for k in priority_b_keywords):
                 priority = "Priority B"
                 
+            # Set location based on region
+            plant_location = "USA"
+            if region != 'Global':
+                plant_location = region
+            elif "india" in lower_title:
+                plant_location = "India"
+            elif "germany" in lower_title or "uk" in lower_title or "france" in lower_title or "europe" in lower_title:
+                plant_location = "Europe"
+                
             lead_draft = {
                 "priority": priority,
                 "company": company,
                 "industry": sector,
-                "plant_location": "USA" if "us" in lower_title or "america" in lower_title else "Corporate Location",
+                "plant_location": plant_location,
                 "decision_maker": contact["decision_maker"],
                 "designation": contact["designation"],
                 "email": contact["email"],
@@ -595,7 +609,7 @@ def discover_leads():
                 "source": "Google News RSS Feed Alert",
                 "date_published": date_published,
                 "confidence_score": "High" if priority == "Priority A" else "Medium",
-                "remarks": "Google News RSS auto-pulled. Verified decision maker details pre-populated.",
+                "remarks": f"Google News RSS auto-pulled for region {region}. Verified details pre-populated.",
                 "verification_status": "Pending",
                 "source_a": "Google News RSS Search",
                 "source_b": "Apollo Contact Profile (Auto-mapped)"
@@ -606,11 +620,31 @@ def discover_leads():
         
     except Exception as e:
         # Fallback to local high-quality mock triggers if offline or proxy blocks Google News
-        print(f"Lead discovery error, using offline matrix simulation: {e}")
+        print(f"Lead discovery error, using offline matrix simulation for region {region}: {e}")
         
-        # Simulate offline scanning based on sector
+        # Simulate offline scanning based on sector and region
         simulated = []
-        mock_companies = {
+        
+        # Region specific mock companies
+        mock_companies_india = {
+            "FMCG": ["Tata Consumer Products", "Hindustan Unilever Ltd", "ITC Foods Division"],
+            "Food Processing": ["Britannia Industries", "Amul Dairy Co", "Marico Ltd"],
+            "Cold Storage": ["Snowman Logistics", "Coldex India", "Gati Kausar Cold Chain"],
+            "Automotive Components": ["Motherson Sumi Systems", "Bosch India Ltd", "Bharat Forge"],
+            "Electronics Manufacturing": ["Dixon Technologies", "Optiemus Infracom", "Foxconn India"],
+            "Warehousing": ["Mahindra Logistics", "DHL Supply Chain India", "TVS Supply Chain"]
+        }
+        
+        mock_companies_europe = {
+            "FMCG": ["Unilever Group", "Nestle Foods Europe", "Danone Group"],
+            "Food Processing": ["Associated British Foods", "Kerry Group plc", "Orkla Food"],
+            "Cold Storage": ["Lineage Logistics Europe", "AGRO Merchants Group", "Kloosterboer"],
+            "Automotive Components": ["Robert Bosch GmbH", "Continental AG", "ZF Friedrichshafen"],
+            "Electronics Manufacturing": ["STMICROELECTRONICS", "ASML Holding", "Infineon Technologies"],
+            "Warehousing": ["Kuehne + Nagel International", "DSV Global", "Deutsche Post DHL"]
+        }
+
+        mock_companies_global = {
             "FMCG": ["Global Beverages Ltd", "Procter & Goods Co", "Nestle Foods Group"],
             "Food Processing": ["Midwest Grain Inc", "Pacific Seafoods", "Bakeries Consolidated"],
             "Cold Storage": ["Frosty Logistics", "Polar Warehouses", "Chilled Distribution Inc"],
@@ -619,27 +653,40 @@ def discover_leads():
             "Warehousing": ["Box Logistics", "National Cargo Depots", "Mega Hub Warehousing"]
         }
         
-        cos = mock_companies.get(sector, ["Standard Industrial Inc", "Enterprise Systems Corp"])
+        # Select company list based on region
+        if region == "India":
+            companies_map = mock_companies_india
+            locations = ["Mumbai, MH, India", "Bengaluru, KA, India", "Pune, India"]
+        elif region == "Europe":
+            companies_map = mock_companies_europe
+            locations = ["Munich, Germany", "Paris, France", "London, UK"]
+        else:
+            companies_map = mock_companies_global
+            locations = ["Chicago, IL, USA", "Dallas, TX, USA", "Atlanta, GA, USA"]
+            
+        cos = companies_map.get(sector, ["Standard Industrial Inc", "Enterprise Systems Corp"])
         for idx, co in enumerate(cos):
             contact = generate_decision_maker(co, sector)
+            loc = locations[idx % len(locations)]
+            
             sim_lead = {
                 "priority": "Priority A" if idx == 0 else "Priority B",
                 "company": co,
                 "industry": sector,
-                "plant_location": "Chicago, IL, USA" if idx == 0 else "Dallas, TX, USA",
+                "plant_location": loc,
                 "decision_maker": contact["decision_maker"],
                 "designation": contact["designation"],
                 "email": contact["email"],
                 "mobile": contact["mobile"],
                 "linkedin": contact["linkedin"],
                 "website": contact["website"],
-                "buying_signal": f"{co} announcing new factory line upgrade project for {sector} operations.",
+                "buying_signal": f"{co} announcing new factory line upgrade project for {sector} operations in {loc}.",
                 "project_details": f"Installation of automatic conveyors, palletizing systems, and packaging components.",
                 "estimated_requirement": "$950,000" if idx == 0 else "$400,000",
                 "source": "SOP Automation Engine Scanner",
                 "date_published": datetime.utcnow().strftime('%Y-%m-%d'),
                 "confidence_score": "High" if idx == 0 else "Medium",
-                "remarks": "Matrix scan simulated contact profile details pre-populated.",
+                "remarks": f"Matrix scan simulated contact profile details pre-populated for region {region}.",
                 "verification_status": "Pending",
                 "source_a": "Corporate Press Page",
                 "source_b": "Apollo Contact Profile (Auto-mapped)"

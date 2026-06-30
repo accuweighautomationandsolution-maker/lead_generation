@@ -181,13 +181,14 @@ function handleIntakeSubmit(e) {
 // Automated Discovery Scanner handlers
 function runDiscoveryScan() {
     const sector = document.getElementById('discovery-sector').value;
+    const region = document.getElementById('discovery-region').value;
     const loadingDiv = document.getElementById('discovery-loading');
     const resultsWrapper = document.getElementById('discovery-results-wrapper');
     
     loadingDiv.classList.remove('hidden');
     resultsWrapper.classList.add('hidden');
     
-    fetch('/api/discover?sector=' + encodeURIComponent(sector))
+    fetch(`/api/discover?sector=${encodeURIComponent(sector)}&region=${encodeURIComponent(region)}`)
         .then(res => {
             if (res.status === 401) {
                 checkAuthState();
