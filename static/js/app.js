@@ -689,6 +689,7 @@ let currentProspects = [];
 
 function runProspectSearch() {
     const company = document.getElementById('prospect-company').value.trim();
+    const location = document.getElementById('prospect-location').value.trim();
     const role = document.getElementById('prospect-role').value;
     const loadingDiv = document.getElementById('prospector-loading');
     const resultsWrapper = document.getElementById('prospector-results-wrapper');
@@ -700,7 +701,7 @@ function runProspectSearch() {
     resultsWrapper.classList.add('hidden');
     cardsContainer.innerHTML = '';
     
-    fetch(`/api/prospect?company=${encodeURIComponent(company)}&role=${encodeURIComponent(role)}`)
+    fetch(`/api/prospect?company=${encodeURIComponent(company)}&role=${encodeURIComponent(role)}&location=${encodeURIComponent(location)}`)
         .then(res => {
             if (res.status === 401) {
                 checkAuthState();
@@ -741,6 +742,7 @@ function runProspectSearch() {
                             <div>
                                 <h4 style="margin: 0; font-family: 'Outfit', sans-serif; font-size: 15px; color: var(--text-primary);">${escapeHTML(p.name)}</h4>
                                 <p style="margin: 0; font-size: 12px; color: var(--text-secondary);">${escapeHTML(p.designation)}</p>
+                                <p style="margin: 4px 0 0 0; font-size: 11px; color: var(--text-muted); display: flex; align-items: center; gap: 4px;">📍 ${escapeHTML(p.location)}</p>
                             </div>
                         </div>
                         <div style="margin-bottom: 16px;">
@@ -778,7 +780,7 @@ function importProspectToQueue(idx) {
         priority: "Priority B",
         company: p.company,
         industry: document.getElementById('prospect-role').value === "Procurement" ? "Consumables & Processed Goods" : (document.getElementById('prospect-role').value === "Operations" ? "Hard Goods & Components" : "Storage & Distribution"),
-        plant_location: "Not Publicly Available",
+        plant_location: p.location || "Not Publicly Available",
         decision_maker: p.name,
         designation: p.designation,
         email: p.email,

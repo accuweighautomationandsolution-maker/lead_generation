@@ -769,6 +769,7 @@ def check_domain_mx(domain):
 def prospect_search():
     company = request.args.get('company', '').strip()
     role = request.args.get('role', 'Procurement').strip()
+    location = request.args.get('location', '').strip()
     
     if not company:
         return jsonify([]), 200
@@ -785,7 +786,11 @@ def prospect_search():
     email_status = "Verified" if is_mx_valid else "Unverified"
     
     # Query Google News RSS for real executives
-    query = f'"{company}" AND "{role}" AND ("VP" OR "Director" OR "Manager" OR "Officer" OR "Head" OR "Lead")'
+    if location:
+        query = f'"{company}" AND "{role}" AND "{location}" AND ("VP" OR "Director" OR "Manager" OR "Officer" OR "Head" OR "Lead")'
+    else:
+        query = f'"{company}" AND "{role}" AND ("VP" OR "Director" OR "Manager" OR "Officer" OR "Head" OR "Lead")'
+        
     encoded_query = urllib.parse.quote(query)
     url = f"https://news.google.com/rss/search?q={encoded_query}&hl=en-US&gl=US&ceid=US:en"
     
@@ -799,24 +804,24 @@ def prospect_search():
     # First check if we have predefined mock/simulated profiles for this company (Offline rich demo)
     predefined_profiles = {
         "tata consumer products": [
-            ("Sunil D'Souza", "CEO & Managing Director", "sunil.dsouza@tataconsumer.com", True),
-            ("Ajit Krishnakumar", "Chief Operating Officer", "ajit.k@tataconsumer.com", True)
+            ("Sunil D'Souza", "CEO & Managing Director", "sunil.dsouza@tataconsumer.com", True, "Mumbai, MH, India"),
+            ("Ajit Krishnakumar", "Chief Operating Officer", "ajit.k@tataconsumer.com", True, "Mumbai, MH, India")
         ],
         "hindustan unilever": [
-            ("Rohit Jawa", "CEO & Managing Director", "rohit.jawa@hul.co.in", True),
-            ("Willem Uijen", "Executive Director, Supply Chain", "willem.uijen@unilever.com", True)
+            ("Rohit Jawa", "CEO & Managing Director", "rohit.jawa@hul.co.in", True, "Mumbai, MH, India"),
+            ("Willem Uijen", "Executive Director, Supply Chain", "willem.uijen@unilever.com", True, "London, UK")
         ],
         "pepsico": [
-            ("Rinkesh Satija", "VP Supply Chain Operations", "rinkesh.satija@pepsico.com", True),
-            ("Sunil Mohta", "Director SAP Management", "sunil.mohta@pepsico.com", True)
+            ("Rinkesh Satija", "VP Supply Chain Operations", "rinkesh.satija@pepsico.com", True, "Gurgaon, HR, India"),
+            ("Sunil Mohta", "Director SAP Management", "sunil.mohta@pepsico.com", True, "Mumbai, MH, India")
         ],
         "nestle": [
-            ("Mark Schneider", "Chief Executive Officer", "mark.schneider@nestle.com", True),
-            ("Laurent Freixe", "Executive VP, Zone Latin America", "laurent.freixe@nestle.com", True)
+            ("Mark Schneider", "Chief Executive Officer", "mark.schneider@nestle.com", True, "Vevey, Switzerland"),
+            ("Laurent Freixe", "Executive VP, Zone Latin America", "laurent.freixe@nestle.com", True, "Vevey, Switzerland")
         ],
         "unilever": [
-            ("Hein Schumacher", "Chief Executive Officer", "hein.schumacher@unilever.com", True),
-            ("Reginaldo Ecclissato", "Chief Business Operations Officer", "reginaldo.e@unilever.com", True)
+            ("Hein Schumacher", "Chief Executive Officer", "hein.schumacher@unilever.com", True, "London, UK"),
+            ("Reginaldo Ecclissato", "Chief Business Operations Officer", "reginaldo.e@unilever.com", True, "London, UK")
         ]
     }
     
@@ -825,7 +830,10 @@ def prospect_search():
     for predefined_comp, profiles_list in predefined_profiles.items():
         if predefined_comp in comp_key or comp_key in predefined_comp:
             matched_predef = True
-            for name, title, email, mx_val in profiles_list:
+            for name, title, email, mx_val, loc in profiles_list:
+                # If location filter was set, verify it matches
+                if location and location.lower() not in loc.lower():
+                    continue
                 clean_name = re.sub(r'[^a-zA-Z\s]', '', name.lower()).strip()
                 parts = clean_name.split()
                 linkedin = f"linkedin.com/in/{'-'.join(parts)}-{domain_base}"
@@ -836,7 +844,8 @@ def prospect_search():
                     "email": email,
                     "email_status": "Verified" if mx_val else "Unverified",
                     "linkedin": linkedin,
-                    "website": f"www.{domain}"
+                    "website": f"www.{domain}",
+                    "location": loc
                 })
             break
             
@@ -867,6 +876,20 @@ def prospect_search():
                     if len(clean_title) > 60:
                         clean_title = clean_title[:60]
                         
+                    # Extract location heuristics from title
+                    lower_title = title.lower()
+                    loc = "Not Publicly Available"
+                    if location:
+                        loc = location
+                    elif "india" in lower_title:
+                        loc = "India"
+                    elif "germany" in lower_title:
+                        loc = "Germany"
+                    elif "uk" in lower_title or "london" in lower_title:
+                        loc = "United Kingdom"
+                    elif "chicago" in lower_title or "us" in lower_title:
+                        loc = "USA"
+                        
                     prospects.append({
                         "name": name,
                         "designation": clean_title,
@@ -874,7 +897,8 @@ def prospect_search():
                         "email": email,
                         "email_status": email_status,
                         "linkedin": linkedin,
-                        "website": f"www.{domain}"
+                        "website": f"www.{domain}",
+                        "location": loc
                     })
         except Exception as e:
             print(f"Prospecting search error: {e}")
@@ -888,7 +912,8 @@ def prospect_search():
             "email": "Not Publicly Available",
             "email_status": "Unverified",
             "linkedin": "Not Publicly Available",
-            "website": f"www.{domain}"
+            "website": f"www.{domain}",
+            "location": location if location else "Not Publicly Available"
         })
         
     return jsonify(prospects), 200
