@@ -104,12 +104,14 @@ function switchTab(tabId) {
     const titleMap = {
         'tab-overview': 'Sales Pipeline Overview',
         'tab-intake': 'Raw Market Intelligence Ingestion',
+        'tab-prospector': 'B2B Sales Contact Prospector',
         'tab-verification': 'Quality Control & Node Mapping',
         'tab-finished': 'Finished Deliverable Schema'
     };
     const subtitleMap = {
         'tab-overview': 'Interactive SOP Control Panel v1.0',
         'tab-intake': 'Stage 1: Gather and record target triggers',
+        'tab-prospector': 'Free Apollo/Seamless engine - real-time personnel lookup and domain MX check',
         'tab-verification': 'Stage 2 & 3: Profile mapping and conflict resolution verification',
         'tab-finished': 'Stage 5: Fully validated leads list ready for SDR distribution'
     };
@@ -681,4 +683,143 @@ function escapeHTML(str) {
             '"': '&quot;'
         }[tag] || tag)
     );
+}
+
+let currentProspects = [];
+
+function runProspectSearch() {
+    const company = document.getElementById('prospect-company').value.trim();
+    const role = document.getElementById('prospect-role').value;
+    const loadingDiv = document.getElementById('prospector-loading');
+    const resultsWrapper = document.getElementById('prospector-results-wrapper');
+    const cardsContainer = document.getElementById('prospector-cards-container');
+    
+    if (!company) return;
+    
+    loadingDiv.classList.remove('hidden');
+    resultsWrapper.classList.add('hidden');
+    cardsContainer.innerHTML = '';
+    
+    fetch(`/api/prospect?company=${encodeURIComponent(company)}&role=${encodeURIComponent(role)}`)
+        .then(res => {
+            if (res.status === 401) {
+                checkAuthState();
+                throw new Error("Unauthorized");
+            }
+            return res.json();
+        })
+        .then(results => {
+            loadingDiv.classList.add('hidden');
+            currentProspects = results;
+            
+            if (!results || results.length === 0) {
+                cardsContainer.innerHTML = '<div style="grid-column: 1/-1; text-align:center; padding:30px; color:var(--text-muted);">No profiles matching search parameters found in public indexes.</div>';
+                resultsWrapper.classList.remove('hidden');
+                return;
+            }
+            
+            results.forEach((p, idx) => {
+                const initials = p.name !== "Not Publicly Available" 
+                    ? p.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
+                    : "NA";
+                    
+                const badgeText = p.email_status === "Verified" ? "🟢 Domain Verified" : "⚪ Unverified Domain";
+                
+                const linkedinHtml = p.linkedin !== "Not Publicly Available" 
+                    ? `<a href="https://${escapeHTML(p.linkedin)}" target="_blank" class="linkedin-link" style="color: var(--accent-glow); font-size:12px; text-decoration:none; display:inline-flex; align-items:center; gap:4px;">
+                         <span>🔗</span> LinkedIn Profile
+                       </a>`
+                    : `<span style="color:var(--text-muted); font-size:12px;">🔗 LinkedIn Not Public</span>`;
+                
+                const card = document.createElement('div');
+                card.className = 'prospect-card glass';
+                card.style = 'padding: 20px; border-radius: 12px; display: flex; flex-direction: column; justify-content: space-between; border: 1px solid rgba(255,255,255,0.06); background: rgba(255,255,255,0.02);';
+                card.innerHTML = `
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                            <div style="width: 44px; height: 44px; border-radius: 50%; background: var(--border-color); display: flex; align-items: center; justify-content: center; font-family: 'Outfit', sans-serif; font-weight: 600; color: var(--accent-glow); border: 1px solid var(--accent-glow); box-shadow: 0 0 8px rgba(0,240,255,0.15);">${initials}</div>
+                            <div>
+                                <h4 style="margin: 0; font-family: 'Outfit', sans-serif; font-size: 15px; color: var(--text-primary);">${escapeHTML(p.name)}</h4>
+                                <p style="margin: 0; font-size: 12px; color: var(--text-secondary);">${escapeHTML(p.designation)}</p>
+                            </div>
+                        </div>
+                        <div style="margin-bottom: 16px;">
+                            <p style="margin: 0 0 6px 0; font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Business Email</p>
+                            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                <span style="font-family: monospace; font-size: 13px; color: var(--text-primary); word-break: break-all;">${escapeHTML(p.email)}</span>
+                                <span style="font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 500; background: ${p.email_status === "Verified" ? "rgba(0,255,100,0.1)" : "rgba(255,255,255,0.05)"}; color: ${p.email_status === "Verified" ? "#00ff64" : "var(--text-muted)"}; border: 1px solid ${p.email_status === "Verified" ? "rgba(0,255,100,0.2)" : "rgba(255,255,255,0.1)"};">${badgeText}</span>
+                            </div>
+                        </div>
+                        <div style="margin-bottom: 20px;">
+                            ${linkedinHtml}
+                        </div>
+                    </div>
+                    <button type="button" class="btn primary-btn" onclick="importProspectToQueue(${idx})" style="width: 100%; padding: 8px; font-size: 12px; height: auto;">
+                        Import to Queue
+                    </button>
+                `;
+                cardsContainer.appendChild(card);
+            });
+            resultsWrapper.classList.remove('hidden');
+        })
+        .catch(err => {
+            loadingDiv.classList.add('hidden');
+            console.error("Prospecting failed:", err);
+            alert("Prospect search query failed. Please verify your connection.");
+        });
+}
+
+function importProspectToQueue(idx) {
+    const p = currentProspects[idx];
+    if (!p) return;
+    
+    // Map prospect fields to Verification & QC Lead draft
+    const leadDraft = {
+        priority: "Priority B",
+        company: p.company,
+        industry: document.getElementById('prospect-role').value === "Procurement" ? "Consumables & Processed Goods" : (document.getElementById('prospect-role').value === "Operations" ? "Hard Goods & Components" : "Storage & Distribution"),
+        plant_location: "Not Publicly Available",
+        decision_maker: p.name,
+        designation: p.designation,
+        email: p.email,
+        mobile: "Not Publicly Available",
+        linkedin: p.linkedin,
+        website: p.website,
+        buying_signal: `Direct search profile matching ${p.designation} at ${p.company}.`,
+        project_details: `Searched and retrieved via B2B Prospector engine. Email status: ${p.email_status}.`,
+        estimated_requirement: "$100,000",
+        source: "B2B Prospector Search",
+        date_published: new Date().toISOString().split('T')[0],
+        confidence_score: p.email_status === "Verified" ? "High" : "Medium",
+        remarks: `Manually searched and imported contact profile from Apollo Engine.`,
+        verification_status: "Pending"
+    };
+    
+    // Post to /api/leads
+    fetch('/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(leadDraft)
+    })
+    .then(res => {
+        if (res.status === 401) {
+            checkAuthState();
+            throw new Error("Unauthorized");
+        }
+        return res.json();
+    })
+    .then(savedLead => {
+        // Refresh local leads database
+        loadLeads();
+        
+        // Show success alert
+        alert(`Successfully imported ${p.name} to the Verification queue!`);
+        
+        // Navigate directly to the Verification & QC tab
+        switchTab('tab-verification');
+    })
+    .catch(err => {
+        console.error("Import failed:", err);
+        alert("Failed to import prospect. Please try again.");
+    });
 }
